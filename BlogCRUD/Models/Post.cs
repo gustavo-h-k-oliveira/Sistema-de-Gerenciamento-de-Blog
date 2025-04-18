@@ -16,5 +16,10 @@ namespace BlogCRUD.Models
 
         [DataType(DataType.Date)]
         public DateTime DatePublished { get; set; } = DateTime.Now;
+
+        [Display(Name = "Category")]
+        public int? CategoryId { get; set; }
+
+        public Category? Category { get; set; }
     }
 }

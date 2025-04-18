@@ -1,8 +1,8 @@
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using BlogCRUD.Data;
 using BlogCRUD.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BlogCRUD.Controllers
 {
@@ -18,7 +18,10 @@ namespace BlogCRUD.Controllers
         // GET: Posts
         public async Task<IActionResult> Index()
         {
-            var posts = await _context.Posts.ToListAsync();
+            var posts = await _context.Posts
+                    .Include(p => p.Category)
+                    .ToListAsync();
+
             return View(posts);
         }
 
@@ -31,6 +34,7 @@ namespace BlogCRUD.Controllers
             }
 
             var post = await _context.Posts
+                .Include(p => p.Category)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (post == null)
             {
@@ -42,6 +46,7 @@ namespace BlogCRUD.Controllers
         // GET: Posts/Create
         public IActionResult Create()
         {
+            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Nome");
             return View();
         }
 
@@ -72,6 +77,7 @@ namespace BlogCRUD.Controllers
             {
                 return NotFound();
             }
+            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Nome", post.CategoryId);
             return View(post);
         }
 

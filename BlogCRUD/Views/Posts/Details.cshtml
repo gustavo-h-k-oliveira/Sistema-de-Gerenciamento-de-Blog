@@ -1,12 +1,39 @@
 @model BlogCRUD.Models.Post
 
-<h2>Posts Details</h2>
+@{
+    ViewData["Title"] = "Post Details";
+}
+
+<h1>Details</h1>
 
 <div>
-    <h4>@Model.Title</h4>
-    <p>@Model.Content</p>
-    <p><strong>Data:</strong> @Model.DatePublished.ToString("dd/MM/yyyy")</p>
+    <h4>Post</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Title)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Title)
+        </dd>
+
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Content)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Content)
+        </dd>
+
+        <dt class="col-sm-2">
+            Category
+        </dt>
+        <dd class="col-sm-10">
+            @Model.Category?.Name
+        </dd>
+    </dl>
 </div>
 
-<a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
-<a asp-action="Index">Go back to list</a>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
+    <a asp-action="Index">Go back to list</a>
+</div>
