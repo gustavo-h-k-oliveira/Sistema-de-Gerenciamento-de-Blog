@@ -1,12 +1,13 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using BlogCRUD.Models;
 
 namespace BlogCRUD.Data
 {
-    public class BlogContext : DbContext
+    public class BlogContext : IdentityDbContext<ApplicationUser>
     {
         public BlogContext(DbContextOptions<BlogContext> options)
-            : base(options) {}
+            : base(options) { }
 
         public DbSet<Post> Posts {get; set; }
         public DbSet<Category> Categories { get; set; }

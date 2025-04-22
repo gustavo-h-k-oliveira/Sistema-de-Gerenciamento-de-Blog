@@ -3,16 +3,23 @@ using Microsoft.EntityFrameworkCore;
 using BlogCRUD.Data;
 using BlogCRUD.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BlogCRUD.Controllers
 {
+    [Authorize(Roles = "Admin,Editor")]
     public class PostsController : Controller
+
     {
         private readonly BlogContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public PostsController(BlogContext context)
+
+        public PostsController(BlogContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Posts
@@ -57,9 +64,17 @@ namespace BlogCRUD.Controllers
         {
             if (ModelState.IsValid)
             {
+                var user = await _userManager.GetUserAsync(User);
+                if (user == null)
+                {
+                    return Unauthorized();
+                }
+                post.UserId = user.Id;
+                post.DatePublished = DateTime.Now;
+
                 _context.Posts.Add(post);
                 await _context.SaveChangesAsync();
-                return RedirectToAction("Index");
+                return RedirectToAction(nameof(Index));
             }
             return View(post);
         }
@@ -67,17 +82,23 @@ namespace BlogCRUD.Controllers
         // GET: Posts/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var post = await _context.Posts.FindAsync(id);
-            if (post == null)
+            if (post == null) return NotFound();
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
             {
-                return NotFound();
+                return Unauthorized();
             }
-            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Nome", post.CategoryId);
+            var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+
+            if (post.UserId != user.Id && !isAdmin)
+            {
+                return Forbid();
+            }
+
             return View(post);
         }
 
@@ -127,6 +148,18 @@ namespace BlogCRUD.Controllers
             if (post == null)
             {
                 return NotFound();
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }            
+            var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
+
+            if (post.UserId != user.Id && !isAdmin)
+            {
+                return Forbid();
             }
 
             return View(post);

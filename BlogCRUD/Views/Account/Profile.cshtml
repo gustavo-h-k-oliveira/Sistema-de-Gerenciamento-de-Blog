@@ -1,0 +1,14 @@
+@model BlogCRUD.Models.ApplicationUser
+
+@{
+    ViewData["Title"] = "Profile";
+}
+
+<h2>Welcome, @Model.FullName!</h2>
+
+<p><strong>Email:</strong> @Model.Email</p>
+<p><strong>Joined:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy")</p>
+
+<form asp-action="Logout" method="post">
+    <button type="submit" class="btn btn-danger">Logout</button>
+</form>
