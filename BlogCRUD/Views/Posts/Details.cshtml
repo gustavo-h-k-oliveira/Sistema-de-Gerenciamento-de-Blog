@@ -1,4 +1,6 @@
 @model BlogCRUD.Models.Post
+@using Microsoft.AspNetCore.Identity
+@inject UserManager<ApplicationUser> UserManager
 
 @{
     ViewData["Title"] = "Post Details";
@@ -34,6 +36,9 @@
 </div>
 
 <div>
-    <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> |
+    @if ((User.Identity != null && User.Identity.IsAuthenticated && UserManager.GetUserId(User) == Model.UserId) || User.IsInRole("Admin"))
+    {
+        <a asp-action="Edit" asp-route-id="@Model.Id">Edit</a> <span>|</span>
+    }
     <a asp-action="Index">Go back to list</a>
 </div>

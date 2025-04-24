@@ -1,4 +1,5 @@
 @model IEnumerable<BlogCRUD.Models.Post>
+@inject UserManager<ApplicationUser> UserManager
 
 @{
     ViewData["Title"] = "Posts List";
@@ -29,7 +30,7 @@
             <td>@item.Category?.Name</td>
             <td>
                 <a class="btn btn-info btn-sm" asp-action="Details" asp-route-id="@item.Id">Details</a>
-                @if (User.Identity != null && User.Identity.IsAuthenticated && User.FindFirst("sub")?.Value == item.UserId || User.IsInRole("Admin"))
+                @if (User.Identity != null && User.Identity.IsAuthenticated && UserManager.GetUserId(User) == item.UserId || User.IsInRole("Admin"))
                 {
                     <a class="btn btn-warning btn-sm" asp-action="Edit" asp-route-id="@item.Id">Edit</a>
                     <a class="btn btn-danger btn-sm" asp-action="Delete" asp-route-id="@item.Id">Delete</a>

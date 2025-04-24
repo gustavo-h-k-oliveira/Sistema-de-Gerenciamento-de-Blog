@@ -11,14 +11,15 @@ namespace BlogCRUD.Models
         public string Title { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Content is required")]
-        [StringLength(500)]
+        [StringLength(1000)]
         public string Content { get; set; } = string.Empty;
 
         [DataType(DataType.Date)]
         public DateTime DatePublished { get; set; } = DateTime.Now;
 
+        [Required(ErrorMessage = "The Category field is required")]
         [Display(Name = "Category")]
-        public int? CategoryId { get; set; }
+        public int CategoryId { get; set; }
 
         public Category? Category { get; set; }
 

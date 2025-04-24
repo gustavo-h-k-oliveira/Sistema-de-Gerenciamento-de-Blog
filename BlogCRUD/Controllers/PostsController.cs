@@ -55,7 +55,7 @@ namespace BlogCRUD.Controllers
         // GET: Posts/Create
         public IActionResult Create()
         {
-            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name");
+            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", 1);
             return View();
         }
 
@@ -66,19 +66,25 @@ namespace BlogCRUD.Controllers
         {
             if (ModelState.IsValid)
             {
-                if (!_context.Categories.Any(c => c.Id == post.CategoryId))
+                var generalCategory = await _context.Categories.FirstOrDefaultAsync(c => c.Name == "General");
+                if (generalCategory == null)
                 {
-                    ModelState.AddModelError("CategoryId", "The selected category is invalid.");
-                    ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", post.CategoryId);
-                    return View(post);
+                    generalCategory = new Category { Name = "General" };
+                    _context.Categories.Add(generalCategory);
+                    await _context.SaveChangesAsync();
+                }
+
+                if (post.CategoryId == 0 || !_context.Categories.Any(c => c.Id == post.CategoryId))
+                {
+                    post.CategoryId = generalCategory.Id;
                 }
 
                 var user = await _userManager.GetUserAsync(User);
                 if (user == null)
                 {
-                    Console.WriteLine("User is not authenticated.");
                     return Unauthorized();
                 }
+
                 post.UserId = user.Id;
                 post.DatePublished = DateTime.Now;
 
@@ -86,7 +92,8 @@ namespace BlogCRUD.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name");
+
+            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", post.CategoryId);
             return View(post);
         }
 
@@ -101,17 +108,11 @@ namespace BlogCRUD.Controllers
             if (post == null) return NotFound();
 
             var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                return Unauthorized();
-            }
+            if (user == null) return Unauthorized();
 
             var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
 
-            if (post.UserId != user.Id && !isAdmin)
-            {
-                return Forbid();
-            }
+            if (post.UserId != user.Id && !isAdmin) return Forbid();
             
             ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", post.CategoryId);
 
@@ -123,10 +124,7 @@ namespace BlogCRUD.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Content,DatePublished,CategoryId")] Post post)
         {
-            if (id != post.Id)
-            {
-                return NotFound();
-            }
+            if (id != post.Id) return NotFound();
 
             ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", post.CategoryId);
 
