@@ -47,9 +47,16 @@ namespace BlogCRUD.Controllers
             if (result.Succeeded)
             {
                 if (!await _roleManager.RoleExistsAsync("Reader"))
+                {
                     await _roleManager.CreateAsync(new IdentityRole("Reader"));
-
+                }
                 await _userManager.AddToRoleAsync(user, "Reader");
+
+                if (!await _roleManager.RoleExistsAsync("Editor"))
+                {
+                    await _roleManager.CreateAsync(new IdentityRole("Editor"));
+                }
+                await _userManager.AddToRoleAsync(user, "Editor");
 
                 await _signInManager.SignInAsync(user, isPersistent: false);
                 return RedirectToAction("Index", "Home");

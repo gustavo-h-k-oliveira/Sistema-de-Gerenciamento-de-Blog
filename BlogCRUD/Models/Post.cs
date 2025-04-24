@@ -11,7 +11,7 @@ namespace BlogCRUD.Models
         public string Title { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Content is required")]
-        [StringLength(250)]
+        [StringLength(500)]
         public string Content { get; set; } = string.Empty;
 
         [DataType(DataType.Date)]

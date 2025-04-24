@@ -23,11 +23,13 @@ namespace BlogCRUD.Controllers
         }
 
         // GET: Posts
+        [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
             var posts = await _context.Posts
-                    .Include(p => p.Category)
-                    .ToListAsync();
+                .Include(p => p.Category) // Inclui a categoria
+                .Include(p => p.User)     // Inclui o autor (usuário)
+                .ToListAsync();
 
             return View(posts);
         }
@@ -53,7 +55,7 @@ namespace BlogCRUD.Controllers
         // GET: Posts/Create
         public IActionResult Create()
         {
-            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Nome");
+            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name");
             return View();
         }
 
@@ -64,9 +66,17 @@ namespace BlogCRUD.Controllers
         {
             if (ModelState.IsValid)
             {
+                if (!_context.Categories.Any(c => c.Id == post.CategoryId))
+                {
+                    ModelState.AddModelError("CategoryId", "The selected category is invalid.");
+                    ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", post.CategoryId);
+                    return View(post);
+                }
+
                 var user = await _userManager.GetUserAsync(User);
                 if (user == null)
                 {
+                    Console.WriteLine("User is not authenticated.");
                     return Unauthorized();
                 }
                 post.UserId = user.Id;
@@ -76,10 +86,13 @@ namespace BlogCRUD.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name");
             return View(post);
         }
 
         // GET: Posts/Edit/5
+        [Authorize]
+        [HttpGet]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null) return NotFound();
@@ -92,12 +105,15 @@ namespace BlogCRUD.Controllers
             {
                 return Unauthorized();
             }
+
             var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
 
             if (post.UserId != user.Id && !isAdmin)
             {
                 return Forbid();
             }
+            
+            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", post.CategoryId);
 
             return View(post);
         }
@@ -105,15 +121,23 @@ namespace BlogCRUD.Controllers
         // POST: Posts/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Content,DatePublished")] Post post)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Content,DatePublished,CategoryId")] Post post)
         {
             if (id != post.Id)
             {
                 return NotFound();
             }
 
+            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", post.CategoryId);
+
             if (ModelState.IsValid)
             {
+                if (!_context.Categories.Any(c => c.Id == post.CategoryId))
+                {
+                    ModelState.AddModelError("CategoryId", "The selected category is invalid.");
+                    return View(post);
+                }
+
                 try
                 {
                     _context.Update(post);
@@ -132,29 +156,21 @@ namespace BlogCRUD.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+
             return View(post);
         }
 
         // GET: Posts/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
-            var post = await _context.Posts
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (post == null)
-            {
-                return NotFound();
-            }
+            var post = await _context.Posts.FirstOrDefaultAsync(m => m.Id == id);
+            if (post == null) return NotFound();
 
             var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                return Unauthorized();
-            }            
+            if (user == null) return Unauthorized();
+
             var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
 
             if (post.UserId != user.Id && !isAdmin)
