@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using BlogCRUD.Models;
 using BlogCRUD.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 
 namespace BlogCRUD.Controllers
 {
@@ -104,8 +105,31 @@ namespace BlogCRUD.Controllers
         [Authorize]
         public async Task<IActionResult> Profile()
         {
-            var user = await _userManager.GetUserAsync(User);
+            var user = await _userManager.GetUserAsync(User)!;
             return View(user);
+        }
+
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Users()
+        {
+            var currentUserId = _userManager.GetUserId(User);
+            if (currentUserId == null)
+            {
+                return Forbid(); // Ou outra ação apropriada
+            }
+
+            var users = await _userManager.Users
+                .Where(u => u.Id != currentUserId)
+                .Select(u => new UserListViewModel
+                {
+                    Id = u.Id,
+                    FullName = u.FullName,
+                    Email = u.Email,
+                    CreatedAt = u.CreatedAt
+                })
+                .ToListAsync();
+
+            return View(users);
         }
 
         private IActionResult RedirectToLocal(string returnUrl)

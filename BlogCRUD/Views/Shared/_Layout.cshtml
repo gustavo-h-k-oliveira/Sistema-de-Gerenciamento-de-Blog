@@ -36,6 +36,12 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="posts" asp-action="Index">Posts</a>
                         </li>
+                        @if (SignInManager.IsSignedIn(User) && User.IsInRole("Admin"))
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Users">Usuários</a>
+                            </li>
+                        }
                         @if (SignInManager.IsSignedIn(User))
                         {
                             <li class="nav-item">

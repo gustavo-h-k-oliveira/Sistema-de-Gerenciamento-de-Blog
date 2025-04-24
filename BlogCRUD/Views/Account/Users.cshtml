@@ -1,0 +1,27 @@
+@model IEnumerable<BlogCRUD.ViewModels.UserListViewModel>
+
+@{
+    ViewData["Title"] = "Users";
+}
+
+<h2>Users</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Full name</th>
+            <th>Email</th>
+            <th>Joined at</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach (var user in Model)
+    {
+        <tr>
+            <td>@user.FullName</td>
+            <td>@user.Email</td>
+            <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+        </tr>
+    }
+    </tbody>
+</table>
