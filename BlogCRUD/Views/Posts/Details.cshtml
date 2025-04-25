@@ -42,3 +42,40 @@
     }
     <a asp-action="Index">Go back to list</a>
 </div>
+
+@{
+    var commentCount = Model.Comments.Count();
+}
+@if (commentCount == 0)
+{
+    <h3><span>No comments yet</span></h3>
+}
+else
+{
+    <h3><span>@commentCount comment@(commentCount == 1 ? "" : "s")</span></h3>
+}
+
+@foreach (var comment in Model.Comments)
+{
+    <div class="card mb-2">
+        <div class="card-body">
+            <p>@comment.Content</p>
+            <small>By <strong>@comment.User.UserName</strong> in @comment.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+        </div>
+    </div>
+}
+
+@if (User.Identity != null && User.Identity.IsAuthenticated)
+{
+    <form asp-controller="Comment" asp-action="Create" method="post">
+        <input type="hidden" name="postId" value="@Model.Id" />
+        <div class="form-group">
+            <textarea name="content" class="form-control" rows="3" placeholder="Write your comment..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Comment</button>
+    </form>
+}
+else
+{
+    <p><a href="/Account/Login">Sign In</a> to comment.</p>
+}

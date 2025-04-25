@@ -25,5 +25,6 @@ namespace BlogCRUD.Models
 
         public string UserId { get; set; } = string.Empty;
         public ApplicationUser? User { get; set; }
+        public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     }
 }

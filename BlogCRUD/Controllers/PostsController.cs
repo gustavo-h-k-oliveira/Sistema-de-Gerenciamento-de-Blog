@@ -27,8 +27,9 @@ namespace BlogCRUD.Controllers
         public async Task<IActionResult> Index()
         {
             var posts = await _context.Posts
-                .Include(p => p.Category) // Inclui a categoria
-                .Include(p => p.User)     // Inclui o autor (usuário)
+                .Include(p => p.Category) 
+                .Include(p => p.User)     
+                .Include(p => p.Comments)
                 .ToListAsync();
 
             return View(posts);
@@ -38,17 +39,18 @@ namespace BlogCRUD.Controllers
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
-            {
                 return NotFound();
-            }
 
             var post = await _context.Posts
                 .Include(p => p.Category)
+                .Include(p => p.User)
+                .Include(p => p.Comments)
+                    .ThenInclude(c => c.User)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (post == null)
-            {
                 return NotFound();
-            }
+
             return View(post);
         }
 

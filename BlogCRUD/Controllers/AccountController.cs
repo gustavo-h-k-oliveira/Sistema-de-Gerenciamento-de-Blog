@@ -7,21 +7,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BlogCRUD.Controllers
 {
-    public class AccountController : Controller
+    public class AccountController(
+        UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager,
+        RoleManager<IdentityRole> roleManager) : Controller
     {
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
-        private readonly RoleManager<IdentityRole> _roleManager;
-
-        public AccountController(
-            UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager,
-            RoleManager<IdentityRole> roleManager)
-        {
-            _userManager = userManager;
-            _signInManager = signInManager;
-            _roleManager = roleManager;
-        }
+        private readonly UserManager<ApplicationUser> _userManager = userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
+        private readonly RoleManager<IdentityRole> _roleManager = roleManager;
 
         [HttpGet]
         public IActionResult Register()
@@ -124,7 +117,7 @@ namespace BlogCRUD.Controllers
                 {
                     Id = u.Id,
                     FullName = u.FullName,
-                    Email = u.Email,
+                    Email = u.Email ?? string.Empty,
                     CreatedAt = u.CreatedAt
                 })
                 .ToListAsync();
