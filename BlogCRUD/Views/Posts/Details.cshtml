@@ -61,6 +61,14 @@ else
         <div class="card-body">
             <p>@comment.Content</p>
             <small>By <strong>@comment.User.UserName</strong> in @comment.CreatedAt.ToString("dd/MM/yyyy HH:mm")</small>
+            @if (User.IsInRole("Admin"))
+            {
+                <form asp-controller="Comment" asp-action="Delete" method="post" style="display:inline;">
+                    <input type="hidden" name="id" value="@comment.Id" />
+                    <input type="hidden" name="postId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </form>
+            }
         </div>
     </div>
 }

@@ -53,5 +53,22 @@ namespace BlogCRUD.Controllers
 
             return RedirectToAction("Details", "Posts", new { id = postId });
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id, int postId)
+        {
+            var comment = await _context.Comments.FindAsync(id);
+            if (comment == null)
+            {
+                return NotFound();
+            }
+
+            _context.Comments.Remove(comment);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Details", "Posts", new { id = postId });
+        }
     }
 }
