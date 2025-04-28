@@ -12,6 +12,7 @@
             <th>Full name</th>
             <th>Email</th>
             <th>Joined at</th>
+            <th>Actions</th>
         </tr>
     </thead>
     <tbody>
@@ -21,6 +22,12 @@
             <td>@user.FullName</td>
             <td>@user.Email</td>
             <td>@user.CreatedAt.ToString("dd/MM/yyyy")</td>
+            <td>
+                <form asp-action="BanUser" method="post">
+                    <input type="hidden" name="userId" value="@user.Id" />
+                    <button type="submit" class="btn btn-danger btn-sm">Ban</button>
+                </form>
+            </td>
         </tr>
     }
     </tbody>

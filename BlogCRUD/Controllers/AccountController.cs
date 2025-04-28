@@ -4,17 +4,20 @@ using BlogCRUD.Models;
 using BlogCRUD.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using BlogCRUD.Data;
 
 namespace BlogCRUD.Controllers
 {
     public class AccountController(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        RoleManager<IdentityRole> roleManager) : Controller
+        RoleManager<IdentityRole> roleManager,
+        BlogContext context) : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
         private readonly RoleManager<IdentityRole> _roleManager = roleManager;
+        private readonly BlogContext _context = context;
 
         [HttpGet]
         public IActionResult Register()
@@ -27,6 +30,13 @@ namespace BlogCRUD.Controllers
         {
             if (!ModelState.IsValid)
                 return View(model);
+
+            // Verifica se o email está banido
+            if (_context.BannedEmails.Any(be => be.Email == model.Email))
+            {
+                ModelState.AddModelError(string.Empty, "This email is banned from registering.");
+                return View(model);
+            }
 
             var user = new ApplicationUser
             {
@@ -57,7 +67,7 @@ namespace BlogCRUD.Controllers
             }
 
             foreach (var error in result.Errors)
-                ModelState.AddModelError("", error.Description);
+                ModelState.AddModelError(string.Empty, error.Description);
 
             return View(model);
         }
@@ -123,6 +133,29 @@ namespace BlogCRUD.Controllers
                 .ToListAsync();
 
             return View(users);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BanUser(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // Adiciona o email à tabela de emails banidos
+            var bannedEmail = new BannedEmail { Email = user.Email ?? string.Empty };
+            _context.BannedEmails.Add(bannedEmail);
+
+            // Remove o usuário da plataforma
+            await _userManager.DeleteAsync(user);
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Users));
         }
 
         private IActionResult RedirectToLocal(string returnUrl)
