@@ -24,14 +24,35 @@ namespace BlogCRUD.Controllers
 
         // GET: Posts
         [AllowAnonymous]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchTerm, int? categoryId)
         {
-            var posts = await _context.Posts
-                .Include(p => p.Category) 
-                .Include(p => p.User)     
-                .Include(p => p.Comments)
-                .ToListAsync();
+            // Passa os valores para a View
+            ViewData["SearchTerm"] = searchTerm;
+            ViewData["CategoryId"] = categoryId;
 
+            // Preenche o dropdown de categorias
+            ViewBag.Categories = await _context.Categories.ToListAsync();
+
+            // Consulta inicial
+            var query = _context.Posts
+                .Include(p => p.Category)
+                .Include(p => p.User)
+                .AsQueryable();
+
+            // Filtra por termo de busca
+            if (!string.IsNullOrEmpty(searchTerm))
+            {
+                query = query.Where(p => p.Title.Contains(searchTerm) || p.Content.Contains(searchTerm));
+            }
+
+            // Filtra por categoria
+            if (categoryId.HasValue)
+            {
+                query = query.Where(p => p.CategoryId == categoryId.Value);
+            }
+
+            // Retorna os resultados
+            var posts = await query.ToListAsync();
             return View(posts);
         }
 

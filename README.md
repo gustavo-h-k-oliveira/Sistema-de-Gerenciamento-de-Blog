@@ -1,8 +1,9 @@
 # Sistema-de-Gerenciamento-de-Blog
 
 ## To-do List
+
 - [x] Sistema de comentários
-- [ ] Busca por posts
+- [x] Busca por posts
 - [ ] Categorias e tags para posts
 - [ ] Paginação de posts
 - [ ] Cadastro e login de usuários
