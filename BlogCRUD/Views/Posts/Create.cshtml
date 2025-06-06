@@ -1,4 +1,4 @@
-@model BlogCRUD.Models.Post
+@model BlogCRUD.ViewModels.PostViewModel
 
 @{
     ViewData["Title"] = "Create Post";
@@ -18,11 +18,15 @@
         <span asp-validation-for="Content" class="text-danger"></span>
     </div>
     <div class="form-group">
-        <label asp-for="CategoryId" class="control-label"></label>
+        <label asp-for="Category" class="control-label"></label>
         <select asp-for="CategoryId" asp-items="ViewBag.Categories" class="form-control">
             <option value="">Select a Category</option>
         </select>
         <span asp-validation-for="CategoryId" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label>Tags</label>
+        <select asp-for="SelectedTagIds" asp-items="@(new MultiSelectList(Model.AllTags, "Id", "Name", Model.SelectedTagIds))" multiple class="form-control"></select>
     </div>
     <button type="submit" class="btn btn-primary">Save</button>
 </form>

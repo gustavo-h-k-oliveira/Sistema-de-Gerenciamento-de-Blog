@@ -78,14 +78,18 @@ namespace BlogCRUD.Controllers
         // GET: Posts/Create
         public IActionResult Create()
         {
+            var vm = new BlogCRUD.ViewModels.PostViewModel
+            {
+                AllTags = _context.Tags.ToList()
+            };
             ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", 1);
-            return View();
+            return View(vm);
         }
 
         // POST: Posts/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Post post)
+        public async Task<IActionResult> Create(BlogCRUD.ViewModels.PostViewModel vm)
         {
             if (ModelState.IsValid)
             {
@@ -97,9 +101,9 @@ namespace BlogCRUD.Controllers
                     await _context.SaveChangesAsync();
                 }
 
-                if (post.CategoryId == 0 || !_context.Categories.Any(c => c.Id == post.CategoryId))
+                if (vm.CategoryId == 0 || !_context.Categories.Any(c => c.Id == vm.CategoryId))
                 {
-                    post.CategoryId = generalCategory.Id;
+                    vm.CategoryId = generalCategory.Id;
                 }
 
                 var user = await _userManager.GetUserAsync(User);
@@ -108,16 +112,24 @@ namespace BlogCRUD.Controllers
                     return Unauthorized();
                 }
 
-                post.UserId = user.Id;
-                post.DatePublished = DateTime.Now;
+                var post = new Post
+                {
+                    Title = vm.Title,
+                    Content = vm.Content,
+                    CategoryId = vm.CategoryId,
+                    UserId = user.Id,
+                    DatePublished = DateTime.Now,
+                    PostTags = vm.SelectedTagIds.Select(tagId => new PostTag { TagId = tagId }).ToList()
+                };
 
                 _context.Posts.Add(post);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
 
-            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", post.CategoryId);
-            return View(post);
+            vm.AllTags = _context.Tags.ToList();
+            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", vm.CategoryId);
+            return View(vm);
         }
 
         // GET: Posts/Edit/5
@@ -127,58 +139,66 @@ namespace BlogCRUD.Controllers
         {
             if (id == null) return NotFound();
 
-            var post = await _context.Posts.FindAsync(id);
+            var post = await _context.Posts
+                .Include(p => p.PostTags)
+                .FirstOrDefaultAsync(p => p.Id == id);
             if (post == null) return NotFound();
 
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
 
             var isAdmin = await _userManager.IsInRoleAsync(user, "Admin");
-
             if (post.UserId != user.Id && !isAdmin) return Forbid();
-            
-            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", post.CategoryId);
 
-            return View(post);
+            var vm = new BlogCRUD.ViewModels.PostViewModel
+            {
+                Id = post.Id,
+                Title = post.Title,
+                Content = post.Content,
+                CategoryId = post.CategoryId,
+                SelectedTagIds = post.PostTags.Select(pt => pt.TagId).ToList(),
+                AllTags = _context.Tags.ToList()
+            };
+
+            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", post.CategoryId);
+            return View(vm);
         }
 
         // POST: Posts/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Content,DatePublished,CategoryId")] Post post)
+        public async Task<IActionResult> Edit(int id, BlogCRUD.ViewModels.PostViewModel vm)
         {
-            if (id != post.Id) return NotFound();
+            if (id != vm.Id) return NotFound();
 
-            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", post.CategoryId);
+            ViewBag.Categories = new SelectList(_context.Categories, "Id", "Name", vm.CategoryId);
 
             if (ModelState.IsValid)
             {
-                if (!_context.Categories.Any(c => c.Id == post.CategoryId))
+                var post = await _context.Posts
+                    .Include(p => p.PostTags)
+                    .FirstOrDefaultAsync(p => p.Id == id);
+
+                if (post == null) return NotFound();
+
+                post.Title = vm.Title;
+                post.Content = vm.Content;
+                post.CategoryId = vm.CategoryId;
+
+                // Atualiza tags
+                post.PostTags.Clear();
+                foreach (var tagId in vm.SelectedTagIds)
                 {
-                    ModelState.AddModelError("CategoryId", "The selected category is invalid.");
-                    return View(post);
+                    post.PostTags.Add(new PostTag { PostId = post.Id, TagId = tagId });
                 }
 
-                try
-                {
-                    _context.Update(post);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!PostExists(post.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+                _context.Update(post);
+                await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
 
-            return View(post);
+            vm.AllTags = _context.Tags.ToList();
+            return View(vm);
         }
 
         // GET: Posts/Delete/5
