@@ -1,0 +1,32 @@
+@model IEnumerable<BlogCRUD.Models.Tag>
+
+@{
+    ViewData["Title"] = "Tags";
+}
+
+<h2>Tags</h2>
+
+<p>
+    <a class="btn btn-primary" asp-action="Create">Create new tag</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var tag in Model)
+{
+        <tr>
+            <td style="color: #6694FF;">@tag.Name</td>
+            <td>
+                <a class="btn btn-warning btn-sm" asp-action="Edit" asp-route-id="@tag.Id">Edit</a>
+                <a class="btn btn-danger btn-sm" asp-action="Delete" asp-route-id="@tag.Id">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

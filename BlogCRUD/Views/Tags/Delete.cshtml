@@ -1,0 +1,19 @@
+@model BlogCRUD.Models.Tag
+
+
+@{
+    ViewData["Title"] = "Delete Tag";
+}
+
+<h2>Delete Tag</h2>
+
+<h3>Are you sure you want to delete this tag?</h3>
+<div>
+    <h4 style="color: #6694FF;">@Model.Name</h4>
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Delete</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+</form>
